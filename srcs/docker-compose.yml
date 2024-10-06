@@ -4,12 +4,17 @@ services:
     build: ./requirements/nginx
     image: nginx
     ports:
-      - "80:80"
+      - 443:443
     volumes:
       - postgres_data:/usr/share/nginx/html
     restart: always
     networks:
       - transcendence
+    environment:
+      DOMAIN_NAME: ${DOMAIN_NAME}
+      CERTS_CRT: ${CERTS_CRT}
+      CERTS_KEY: ${CERTS_KEY}
+      NAME: ${NAME}
 
   backend:
     container_name: Django

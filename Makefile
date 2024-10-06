@@ -3,15 +3,16 @@ all: host vol
 	@docker compose -f ./srcs/docker-compose.yml up -d --build
 
 host:
-	sudo sed -i 's|localhost|jocorrea.42.fr|g' /etc/hosts
+	sudo sed -i 's|localhost|trascendence.42.es|g' /etc/hosts
 
 down:
 	@docker compose -f ./srcs/docker-compose.yml down
 	@if [ -n "$$(docker image ls -aq)" ]; then \
 		docker image rmi $$(docker image ls -aq); \
 	fi
-re:
-	@docker compose -f srcs/docker-compose.yml up -d --build
+re: down clean all
+
+reset: down all
 
 vol:
 	mkdir -p $(HOME)/data/postgres_data
@@ -22,7 +23,7 @@ vol:
 status :
 	@docker ps -a
 
-clean:
+clean: down
 	@docker stop $$(docker ps -qa);\
 	docker rm $$(docker ps -qa);\
 	docker image rmi $$(docker image ls -aq); \
