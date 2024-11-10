@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma de Torneos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            overflow: hidden;
+        }
+        .header, .torneos, .sala-detalles {
+            padding: 20px;
+            background: #fff;
+            margin-top: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .torneo {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .torneo h3, .sala h4 {
+            margin: 0;
+        }
+        .btn {
+            display: inline-block;
+            padding: 8px 15px;
+            margin-top: 5px;
+            text-decoration: none;
+            color: #fff;
+            background-color: #333;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Plataforma de Torneos de Pong</h1>
+            <p>Participa en torneos eliminatorios y compite en tiempo real</p>
+            <a href="#" class="btn" onclick="crearTorneo()">Crear Torneo</a>
+        </div>
+        
+        <div class="torneos" id="torneos">
+            <h2>Torneos Disponibles</h2>
+            <!-- Lista de torneos será generada aquí -->
+        </div>
+
+        <div class="sala-detalles" id="sala-detalles" style="display: none;">
+            <h2>Salas del Torneo</h2>
+            <!-- Detalles de salas del torneo serán generados aquí -->
+        </div>
+    </div>
+
+    <script>
+        let currentTorneoId = null;
+        let socket = null;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            obtenerTorneos();
+        });
+
+        // Función para obtener la lista de torneos
+        async function obtenerTorneos() {
+            const response = await fetch('/torneo/api/torneos/');
+            const torneos = await response.json();
+            const torneosDiv = document.getElementById("torneos");
+            torneosDiv.innerHTML = "";
+
+            torneos.forEach(torneo => {
+                const torneoDiv = document.createElement("div");
+                torneoDiv.className = "torneo";
+                torneoDiv.innerHTML = `
+                    <h3>${torneo.nombre} ${torneo.es_privado ? '(Privado)' : '(Público)'}</h3>
+                    <p>Creador: ${torneo.creador}</p>
+                    <p>Estado: ${torneo.estado}</p>
+                    <a href="#" class="btn" onclick="verDetallesTorneo('${torneo.id}')">Ver Detalles</a>
+                    <a href="#" class="btn" onclick="unirseTorneo('${torneo.id}')">Unirse</a>
+                `;
+                torneosDiv.appendChild(torneoDiv);
+            });
+        }
+
+        // Función para unirse a un torneo
+        async function unirseTorneo(torneoId) {
+            const response = await fetch(`/torneo/api/torneos/${torneoId}/unirse`, { method: 'POST' });
+            if (response.ok) {
+                alert("Te has unido al torneo");
+                verDetallesTorneo(torneoId);
+            } else {
+                alert("Error al unirse al torneo");
+            }
+        }
+
+        // Función para ver detalles de un torneo y sus salas
+        function verDetallesTorneo(torneoId) {
+            currentTorneoId = torneoId;
+            document.getElementById("sala-detalles").style.display = "block";
+            conectarWebSocket();
+        }
+
+        // Conexión WebSocket para actualizaciones en tiempo real
+        function conectarWebSocket() {
+            if (socket) socket.close();
+            socket = new WebSocket(`ws://${window.location.host}/ws/torneo/${currentTorneoId}/`);
+
+            socket.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                if (data.type === 'torneo_update') {
+                    actualizarSalaEnUI(data.message.sala_id, data.message.estado);
+                }
+            };
+
+            socket.onopen = function() {
+                console.log("Conectado al WebSocket de torneo");
+            };
+
+            socket.onclose = function() {
+                console.log("Desconectado del WebSocket de torneo");
+            };
+        }
+
+        // Función para actualizar la UI de las salas
+        function actualizarSalaEnUI(salaId, estado) {
+            const salaDetallesDiv = document.getElementById("sala-detalles");
+            let salaDiv = document.getElementById(`sala-${salaId}`);
+
+            if (!salaDiv) {
+                // Crear div para la nueva sala
+                salaDiv = document.createElement("div");
+                salaDiv.id = `sala-${salaId}`;
+                salaDiv.className = "sala";
+                salaDetallesDiv.appendChild(salaDiv);
+            }
+
+            salaDiv.innerHTML = `
+                <h4>Sala ${salaId}</h4>
+                <p>Estado: ${estado}</p>
+            `;
+        }
+
+        // Función para crear un torneo
+        async function crearTorneo() {
+            const nombre = prompt("Ingresa el nombre del torneo:");
+            if (!nombre) return;
+            const response = await fetch('/torneo/api/torneos/create/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre, es_privado: false })
+            });
+
+            if (response.ok) {
+                alert("Torneo creado con éxito");
+                obtenerTorneos();
+            } else {
+                alert("Error al crear el torneo");
+            }
+        }
+    </script>
+</body>
+</html>
