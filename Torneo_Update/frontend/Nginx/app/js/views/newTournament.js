@@ -10,7 +10,7 @@ class TournamentView extends HTMLElement {
         this.currentRoundIndex = 0;
         this.addCustom = 0;
         this.configsaved = false;
-        this.qttplayers = 2;
+        this.qttplayers = 4;
         this.IAplayers = 0;
         this.IA = false;
         this.playeron = false;
@@ -55,7 +55,7 @@ class TournamentView extends HTMLElement {
             </div>
             <div id="aiPlayerCountContainer" style="margin-bottom: 20px; display: none;">
                 <p>Selecciona la cantidad de jugadores IA:</p>
-                <input type="range" id="aiPlayerSlider" min="2" max="2" step="1" value="1" style="width: 100%;">
+                <input type="range" id="aiPlayerSlider" min="1" max="2" step="1" value="1" style="width: 100%;">
                 <span id="aiSliderValue">1</span>
             </div>
             <button id="btnSave" type="button" style="width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Guardar Configuración</button>
@@ -101,8 +101,7 @@ class TournamentView extends HTMLElement {
                 if (formContainer.querySelector('#chkSpeed').checked) this.addCustom++;
                 if (formContainer.querySelector('#chkSize').checked) this.addCustom++;
                 if (formContainer.querySelector('#chkDecrease').checked) this.addCustom++;
-                // Ocultar el formulario y mostrar la vista de edición de jugadores
-                container.removeChild(formContainer);
+                container.removeChild(formContainer);// Ocultar el formulario y mostrar la vista de edición de jugadores
                 this.renderEditPlayersView();
             } else
                 alert('Por favor, ingrese un nombre para el torneo.');
@@ -302,15 +301,10 @@ class TournamentView extends HTMLElement {
     renderEditPlayersView() {
         this.innerHTML = `<div id="edit-players-view">
             <h2>Editar Jugadores</h2>
-            ${this.tournamentData.players
-                .filter(player => player.type === 'REAL')
-                .map((player, index) => `
+            ${this.tournamentData.players.filter(player => player.type === 'REAL').map((player, index) => `
                     <div class="player-input">
                         <label for="player-${index}">Jugador ${index + 1}:</label>
-                        <input id="player-${index}" 
-                               data-index="${index}"
-                               value="${player.name}" 
-                               maxlength="15" />
+                        <input id="player-${index}" data-index="${index}"value="${player.name}" maxlength="15" />
                     </div>
                 `).join('')}
             <div id="error-message" style="color: red; display: none;"></div>
@@ -320,26 +314,19 @@ class TournamentView extends HTMLElement {
             const inputs = Array.from(this.querySelectorAll('input[data-index]'));
             const updatedPlayers = inputs.map(input => {
                 const index = parseInt(input.dataset.index, 10);
-                return {
-                    index,
-                    name: input.value.trim()
-                };
-            });
-            const errorMessageElement = this.querySelector('#error-message');
-            // Validar nombres vacíos
+                return {index,name: input.value.trim()};});
+            const errorMessageElement = this.querySelector('#error-message');// Validar nombres vacíos
             if (updatedPlayers.some(player => player.name === "")) {
                 errorMessageElement.textContent = 'Todos los jugadores deben tener un nombre.';
                 errorMessageElement.style.display = 'block';
                 return; // Detener la ejecución si hay campos vacíos
-            }
-            // Validar nombres únicos
+            }// Validar nombres únicos
             const uniqueNames = new Set(updatedPlayers.map(player => player.name));
             if (uniqueNames.size !== updatedPlayers.length) {
                 errorMessageElement.textContent = 'Los nombres de los jugadores deben ser diferentes.';
                 errorMessageElement.style.display = 'block';
                 return; // Detener la ejecución si hay duplicados
-            }
-            // Si no hay errores, actualizar los datos y continuar
+            }// Si no hay errores, actualizar los datos y continuar
             errorMessageElement.style.display = 'none';
             updatedPlayers.forEach(({ index, name }) => {
                 if (this.tournamentData.players[index]) { // Asegurarse de que el jugador existe
@@ -347,8 +334,7 @@ class TournamentView extends HTMLElement {
                 } else {
                     console.warn(`El jugador con índice ${index} no existe en la lista de jugadores.`);
                 }
-            });
-            //this.tournamentData.players = updatedPlayers;
+            });//this.tournamentData.players = updatedPlayers;
             this.initializeTournament();
         });
     }
@@ -496,16 +482,16 @@ class TournamentView extends HTMLElement {
         let pongGame = null;
         if (player1.type === 'AI' && player2.type === 'AI') {
             const winner = Math.random() < 0.5 ? player1 : player2;
-            let player1Score = 3; // o cualquier valor inicial para el puntaje
-            let player2Score = 0; // o cualquier valor inicial para el puntaje
+            let player1Score = 3; 
+            let player2Score = 0;
             if (winner.name === player2.name) {
-                player1Score = 0; // o cualquier valor inicial para el puntaje
-                player2Score = 3; // o cualquier valor inicial para el puntaje
+                player1Score = 0; 
+                player2Score = 3; 
             }
             return onGameEnd(winner, player1Score, player2Score);
         }
         else if (player2.type === 'AI') {
-            pongGame = renderPonTournament(this.addCustom, player2, player1, (winner, player1Score, player2Score) => { // Callback al terminar el juego
+            pongGame = renderPonTournament(this.addCustom, player2, player1, (winner, player1Score, player2Score) => {
                 onGameEnd(winner, player1Score, player2Score);
             });
         } else {
