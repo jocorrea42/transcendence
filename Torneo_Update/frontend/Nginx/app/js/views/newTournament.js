@@ -12,7 +12,7 @@ class TournamentView extends HTMLElement {
         this.configsaved = false;
         this.qttplayers = 2;
         this.IAplayers = 0;
-        this.IA=false;
+        this.IA = false;
         this.playeron = false;
     }
     connectedCallback() {
@@ -55,61 +55,56 @@ class TournamentView extends HTMLElement {
             </div>
             <div id="aiPlayerCountContainer" style="margin-bottom: 20px; display: none;">
                 <p>Selecciona la cantidad de jugadores IA:</p>
-                <input type="range" id="aiPlayerSlider" min="0" max="2" step="1" value="0" style="width: 100%;">
+                <input type="range" id="aiPlayerSlider" min="2" max="2" step="1" value="1" style="width: 100%;">
                 <span id="aiSliderValue">1</span>
             </div>
             <button id="btnSave" type="button" style="width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Guardar Configuración</button>
         </div>`;
-        // Lógica para el slider
-        // const slider = formContainer.querySelector('#speedSlider');
-        // const sliderValue = formContainer.querySelector('#sliderValue');
-        // const values = [4, 8, 16];
-        // slider.addEventListener('input', () => {
-        //     const selectedValue = values[slider.value];
-        //     sliderValue.textContent = selectedValue;
-        //     this.qttplayers = selectedValue;
-        // });
-        // Lógica para el slider principal
-    const slider = formContainer.querySelector('#speedSlider');
-    const sliderValue = formContainer.querySelector('#sliderValue');
-    const aiSlider = formContainer.querySelector('#aiPlayerSlider');
-    const aiSliderValue = formContainer.querySelector('#aiSliderValue');
-    const values = [4, 8, 16];
-    const maxAIPlayers = values[slider.value] - 1; // máximo para IA, un menos que el slider principal
-    slider.addEventListener('input', () => {
-        const selectedValue = values[slider.value];
-        sliderValue.textContent = selectedValue;
-        this.qttplayers = selectedValue;
-        this.updateAIPlayerCount();
-    });
-    aiSlider.addEventListener('input', () => {
-        const selectedValue = aiSlider.value;
-        aiSliderValue.textContent = selectedValue;
-        this.IAplayers = values[slider.value] - selectedValue;
-    }); // Mostrar/Ocultar el contenedor de IA
-    formContainer.querySelector('#chkIA').addEventListener('change', () => {
-        const aiPlayerCountContainer = formContainer.querySelector('#aiPlayerCountContainer');
-        aiPlayerCountContainer.style.display = formContainer.querySelector('#chkIA').checked ? 'block' : 'none';
-        this.updateAIPlayerCount();
-    });// Lógica para actualizar el slider de IA basado en el slider principal
-    this.updateAIPlayerCount = () => {
-        const maxAIPlayers = values[slider.value] - 1;
-        aiSlider.max = maxAIPlayers;
-        aiSliderValue.textContent = Math.min(aiSlider.value, maxAIPlayers);
-    }; // Manejo del botón Guardar
+        const slider = formContainer.querySelector('#speedSlider');
+        const sliderValue = formContainer.querySelector('#sliderValue');
+        const aiSlider = formContainer.querySelector('#aiPlayerSlider');
+        const aiSliderValue = formContainer.querySelector('#aiSliderValue');
+        const values = [4, 8, 16];
+        //const maxAIPlayers = values[slider.value] - 1; // máximo para IA, un menos que el slider principal
+        slider.addEventListener('input', () => {
+            const selectedValue = values[slider.value];
+            sliderValue.textContent = selectedValue;
+            this.qttplayers = selectedValue;
+            this.updateAIPlayerCount();
+        });
+        aiSlider.addEventListener('input', () => {
+            const selectedValue = aiSlider.value;
+            aiSliderValue.textContent = selectedValue;
+            this.IAplayers = values[slider.value] - selectedValue;
+        }); // Mostrar/Ocultar el contenedor de IA
+        formContainer.querySelector('#chkIA').addEventListener('change', () => {
+            const aiPlayerCountContainer = formContainer.querySelector('#aiPlayerCountContainer');
+            aiPlayerCountContainer.style.display = formContainer.querySelector('#chkIA').checked ? 'block' : 'none';
+            this.updateAIPlayerCount();
+        });// Lógica para actualizar el slider de IA basado en el slider principal
+        this.updateAIPlayerCount = () => {
+            const maxAIPlayers = values[slider.value] - 1;
+            aiSlider.max = maxAIPlayers;
+            aiSliderValue.textContent = Math.min(aiSlider.value, maxAIPlayers);
+        }; // Manejo del botón Guardar
         formContainer.querySelector('#btnSave').addEventListener('click', () => {
             const name = formContainer.querySelector('#tournament-name').value;
             if (name) {
                 this.tournamentData.name = name;
-                this.tournamentData.players = Array.from({ length: this.qttplayers }, (_, i) => `GAMER${i + 1}`);
-                if (formContainer.querySelector('#chkSpeed').checked)
-                    this.addCustom++;
-                if (formContainer.querySelector('#chkSize').checked)
-                    this.addCustom++;
-                if (formContainer.querySelector('#chkDecrease').checked)
-                    this.addCustom++;// Ocultar el formulario y mostrar la vista de edición de jugadores
-                if (formContainer.querySelector('#chkIA').checked)
-                    this.IA=true;
+                if (formContainer.querySelector('#chkIA').checked) this.IA = true;
+                const realPlayersCount = this.qttplayers - (this.IA ? this.IAplayers : 0);
+                const aiPlayersCount = this.IA ? this.IAplayers : 0;
+                console.log(realPlayersCount);
+                console.log(aiPlayersCount);
+                this.tournamentData.players = [
+                    ...Array.from({ length: realPlayersCount }, (_, i) => ({ type: 'REAL', name: `GAMER${i + 1}` })),
+                    ...Array.from({ length: aiPlayersCount }, (_, i) => ({ type: 'AI', name: `IA${i + 1}` }))
+                ];
+                console.log(this.tournamentData.players);
+                if (formContainer.querySelector('#chkSpeed').checked) this.addCustom++;
+                if (formContainer.querySelector('#chkSize').checked) this.addCustom++;
+                if (formContainer.querySelector('#chkDecrease').checked) this.addCustom++;
+                // Ocultar el formulario y mostrar la vista de edición de jugadores
                 container.removeChild(formContainer);
                 this.renderEditPlayersView();
             } else
@@ -300,7 +295,7 @@ class TournamentView extends HTMLElement {
 `;
         document.head.appendChild(style);
         const savedData = localStorage.getItem('tournamentData');
-        if (savedData){
+        if (savedData) {
             this.tournamentData = JSON.parse(savedData);
             this.renderTournamentView();
         }
@@ -310,32 +305,53 @@ class TournamentView extends HTMLElement {
     renderEditPlayersView() {
         this.innerHTML = `<div id="edit-players-view">
             <h2>Editar Jugadores</h2>
-            ${this.tournamentData.players.map((player, index) => `
-                <div class="player-input">
-                    <label for="player-${index}">Jugador ${index + 1}:</label>
-                    <input id="player-${index}" data-index="${index}" value="${player}" maxlength="15" />
-                </div>
-            `).join('')}
+            ${this.tournamentData.players
+                .filter(player => player.type === 'REAL')
+                .map((player, index) => `
+                    <div class="player-input">
+                        <label for="player-${index}">Jugador ${index + 1}:</label>
+                        <input id="player-${index}" 
+                               data-index="${index}"
+                               value="${player.name}" 
+                               maxlength="15" />
+                    </div>
+                `).join('')}
             <div id="error-message" style="color: red; display: none;"></div>
             <button id="btnSave" type="button" style="width: 40%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">ACEPTAR</button>
         </div>`;
         this.querySelector('#btnSave').addEventListener('click', () => {
             const inputs = Array.from(this.querySelectorAll('input[data-index]'));
-            const playerNames = inputs.map(input => input.value.trim());
-            const errorMessageElement = this.querySelector('#error-message');// Validar nombres vacíos
-            if (playerNames.some(name => name === "")) {
+            const updatedPlayers = inputs.map(input => {
+                const index = parseInt(input.dataset.index, 10);
+                return {
+                    index,
+                    name: input.value.trim()
+                };
+            });
+            const errorMessageElement = this.querySelector('#error-message');
+            // Validar nombres vacíos
+            if (updatedPlayers.some(player => player.name === "")) {
                 errorMessageElement.textContent = 'Todos los jugadores deben tener un nombre.';
                 errorMessageElement.style.display = 'block';
                 return; // Detener la ejecución si hay campos vacíos
-            } // Validar nombres únicos
-            const uniqueNames = new Set(playerNames);
-            if (uniqueNames.size !== playerNames.length) {
+            }
+            // Validar nombres únicos
+            const uniqueNames = new Set(updatedPlayers.map(player => player.name));
+            if (uniqueNames.size !== updatedPlayers.length) {
                 errorMessageElement.textContent = 'Los nombres de los jugadores deben ser diferentes.';
                 errorMessageElement.style.display = 'block';
                 return; // Detener la ejecución si hay duplicados
-            }// Si no hay errores, ocultar el mensaje de error y continuar
+            }
+            // Si no hay errores, actualizar los datos y continuar
             errorMessageElement.style.display = 'none';
-            this.tournamentData.players = playerNames;
+            updatedPlayers.forEach(({ index, name }) => {
+                if (this.tournamentData.players[index]) { // Asegurarse de que el jugador existe
+                    this.tournamentData.players[index].name = name;
+                } else {
+                    console.warn(`El jugador con índice ${index} no existe en la lista de jugadores.`);
+                }
+            });
+            //this.tournamentData.players = updatedPlayers;
             this.initializeTournament();
         });
     }
@@ -376,11 +392,11 @@ class TournamentView extends HTMLElement {
                         ${round.map((match, matchIndex) => `
                             <div class="match">
                                 <span>
-                                    ${match.player1 || '---'}: ${match.player1_score != null ? match.player1_score : (match.winner ? 0 : '_')} vs 
-                                    ${match.player2 || '---'}: ${match.player2_score != null ? match.player2_score : (match.winner ? 0 : '_')}
+                                    ${match.player1 ? match.player1.name : '---'}: ${match.player1_score != null ? match.player1_score : (match.winner ? 0 : '_')} vs 
+                                    ${match.player2 ? match.player2.name : '---'}: ${match.player2_score != null ? match.player2_score : (match.winner ? 0 : '_')}
                                 </span>
                                 ${match.winner ? `
-                                    <span>Ganador: ${match.winner}</span>` : `
+                                    <span>Ganador: ${match.winner.name}</span>` : `
                                     <button 
                                         class="start-match" 
                                         data-round-index="${roundIndex}" 
@@ -400,11 +416,16 @@ class TournamentView extends HTMLElement {
                 const roundIndex = parseInt(button.dataset.roundIndex, 10);
                 const matchIndex = parseInt(button.dataset.matchIndex, 10);
                 const match = this.tournamentData.rounds[roundIndex][matchIndex];
-                this.currentMatch = match;// Iniciar el juego y recibir puntajes
+                this.currentMatch = match; // Iniciar el juego y recibir puntajes
                 this.startMatch(match.player1, match.player2, (winner, player1Score, player2Score) => {
                     match.winner = winner;
                     match.player1_score = player1Score;
                     match.player2_score = player2Score;
+                    if (match.player2.type === 'AI' && match.player1.type === 'REAL' ) {
+                        match.player1_score = player2Score;
+                        match.player2_score = player1Score;
+                    }
+
                     if (roundIndex + 1 < this.tournamentData.rounds.length) {
                         const nextMatchIndex = Math.floor(matchIndex / 2);
                         this.tournamentData.rounds[roundIndex + 1][nextMatchIndex][matchIndex % 2 === 0 ? 'player1' : 'player2'] = winner;
@@ -419,21 +440,22 @@ class TournamentView extends HTMLElement {
             });
         });
     }
+
     async save_tournament() {
         try {
             const payload = {
                 name: this.tournamentData.name, // Nombre del torneo
                 date: this.tournamentData.date, // Fecha del torneo
-                players: this.tournamentData.players.map(player => player), // Lista de nombres de jugadores
+                players: this.tournamentData.players.map(player => player.name), // Lista de nombres de jugadores
                 rounds: this.tournamentData.rounds.map(round =>
                     round.map(match => ({
-                        player1: match.player1, // Nombre del jugador 1
-                        player2: match.player2, // Nombre del jugador 2
+                        player1: match.player1.name, // Nombre del jugador 1
+                        player2: match.player2.name, // Nombre del jugador 2
                         player1_score: match.player1_score, // Puntuación del jugador 1
                         player2_score: match.player2_score, // Puntuación del jugador 2
-                        winner: match.winner // Nombre del ganador
+                        winner: match.winner.name // Nombre del ganador
                     }))),
-                winner: this.tournamentData.winner // Nombre del ganador del torneo
+                winner: this.tournamentData.winner.name // Nombre del ganador del torneo
             };
             console.log('Payload enviado:', payload);
             const response = await fetch('http://127.0.0.1:8001/api/tournaments/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), });
@@ -451,7 +473,7 @@ class TournamentView extends HTMLElement {
                 <div id="bracket">${this.generateBracketHTML()}</div>
                 <div id="winner">
                     <h2>¡Ganador del Torneo!</h2>
-                    <p>${this.tournamentData.winner}</p>
+                    <p>${this.tournamentData.winner.name}</p>
                     <button id="save-winner">Guardar y salir</button>
                     <button id="exit">Salir</button>
                 </div>
@@ -462,12 +484,11 @@ class TournamentView extends HTMLElement {
         document.querySelector('#save-winner').addEventListener('click', async () => {
             const connected = await connectToMetaMask();
             if (!connected) return;
-            await saveToBlockchain(this.tournamentData.name, this.tournamentData.date, this.tournamentData.winner);
+            await saveToBlockchain(this.tournamentData.name, this.tournamentData.date, this.tournamentData.winner.name);
         });
         document.querySelector('#exit').addEventListener('click', async () => {
             history.pushState('', '', '/Profile');
             handleRouteChange();
-            const appElement = document.getElementById('app');//appElement.style.display = 'block';
         });
     }
     startMatch(player1, player2, onGameEnd) {
@@ -475,12 +496,29 @@ class TournamentView extends HTMLElement {
         brackets.innerHTML = '';
         const gameContainer = this.querySelector('#game-container');
         this.playeron = true;
-        const pongGame = renderPonTournament(this.addCustom, player1, player2, this.IA, (winner, player1Score, player2Score) => { // Callback al terminar el juego
-            onGameEnd(winner, player1Score, player2Score);
-        });
+        let pongGame = null;
+        if (player1.type === 'AI' && player2.type === 'AI') {
+            const winner = Math.random() < 0.5 ? player1 : player2;
+            let player1Score = 3; // o cualquier valor inicial para el puntaje
+            let player2Score = 0; // o cualquier valor inicial para el puntaje
+            if (winner.name === player2.name) {
+                player1Score = 0; // o cualquier valor inicial para el puntaje
+                player2Score = 3; // o cualquier valor inicial para el puntaje
+            }
+            return onGameEnd(winner, player1Score, player2Score);
+        }
+        else if (player2.type === 'AI') {
+            pongGame = renderPonTournament(this.addCustom, player2, player1, (winner, player1Score, player2Score) => { // Callback al terminar el juego
+                onGameEnd(winner, player1Score, player2Score);
+            });
+        } else {
+            pongGame = renderPonTournament(this.addCustom, player1, player2, (winner, player1Score, player2Score) => { // Callback al terminar el juego
+                onGameEnd(winner, player1Score, player2Score);
+            });
+        }
         this.playeron = false;
         gameContainer.innerHTML = '';
-       this.saveTournamentData();
+        this.saveTournamentData();
         gameContainer.appendChild(pongGame);
     }
     generateBracketHTML() {
@@ -490,8 +528,8 @@ class TournamentView extends HTMLElement {
                 <div class="matches">
                     ${round.map(match => `
                         <div class="match">
-                             <span>${match.player1}: ${match.player1_score} vs ${match.player2}: ${match.player2_score}</span>
-                            ${match.winner ? `<div class="winner">Ganador: ${match.winner}</div>` : ''}
+                             <span>${match.player1.name}: ${match.player1_score} vs ${match.player2.name}: ${match.player2_score}</span>
+                            ${match.winner ? `<div class="winner">Ganador: ${match.winner.name}</div>` : ''}
                         </div>`).join('')}
                 </div>
             </div>`).join('');
