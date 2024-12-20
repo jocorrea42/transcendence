@@ -11,7 +11,7 @@ class TournamentView extends HTMLElement {
         this.addCustom = 0;
         this.configsaved = false;
         this.qttplayers = 4;
-        this.IAplayers = 0;
+        this.IAplayers = 1;
         this.IA = false;
         this.playeron = false;
     }
@@ -201,8 +201,7 @@ class TournamentView extends HTMLElement {
 }
 .match .winner {
     margin-top: 0.5rem;
-    font-weight: bold;
-    color: #16a34a; /* Verde para el ganador */
+    color: #16a34a;
 }
 .round {
     display: flex;
@@ -210,6 +209,10 @@ class TournamentView extends HTMLElement {
     align-items: center;
     gap: 1rem;
     position: relative;
+}
+#bracket h3 {
+    color: #4A90E2;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
 }
 #app{
 	display: flex;
@@ -267,6 +270,21 @@ class TournamentView extends HTMLElement {
     margin-bottom: 1rem;
     color: #334155;
     font-size: 1.5rem;
+}
+#tournament-final-view h2 {
+    font-size: 2rem;
+    color: #4A90E2;
+    text-align: center;
+    margin-bottom: 20px;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+#tournament-final-view p {
+    font-size: 2rem;
+    text-align: center;
+    margin-bottom: 50px;
+	text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    font-weight: 500;
 }
 .player-input {
     display: flex;
@@ -379,7 +397,7 @@ class TournamentView extends HTMLElement {
                                     ${match.player2 ? match.player2.name : '---'}: ${match.player2_score != null ? match.player2_score : (match.winner ? 0 : '_')}
                                 </span>
                                 ${match.winner ? `
-                                    <span>Ganador: ${match.winner.name}</span>` : `
+                                    <span class="winner">Ganador: ${match.winner.name}</span>` : `
                                     <button 
                                         class="start-match" 
                                         data-round-index="${roundIndex}" 
@@ -456,7 +474,7 @@ class TournamentView extends HTMLElement {
                 <div id="bracket">${this.generateBracketHTML()}</div>
                 <div id="winner">
                     <h2>¡Ganador del Torneo!</h2>
-                    <p>${this.tournamentData.winner.name}</p>
+					<p class="gradient-text">${this.tournamentData.winner.name}</p>
                     <button id="save-winner">Guardar y salir</button>
                     <button id="exit">Salir</button>
                 </div>
