@@ -65,7 +65,6 @@ class TournamentView extends HTMLElement {
         const aiSlider = formContainer.querySelector('#aiPlayerSlider');
         const aiSliderValue = formContainer.querySelector('#aiSliderValue');
         const values = [4, 8, 16];
-        //const maxAIPlayers = values[slider.value] - 1; // máximo para IA, un menos que el slider principal
         slider.addEventListener('input', () => {
             const selectedValue = values[slider.value];
             sliderValue.textContent = selectedValue;
@@ -75,7 +74,7 @@ class TournamentView extends HTMLElement {
         aiSlider.addEventListener('input', () => {
             const selectedValue = aiSlider.value;
             aiSliderValue.textContent = selectedValue;
-            this.IAplayers = values[slider.value] - selectedValue;
+            this.IAplayers = selectedValue;
         }); // Mostrar/Ocultar el contenedor de IA
         formContainer.querySelector('#chkIA').addEventListener('change', () => {
             const aiPlayerCountContainer = formContainer.querySelector('#aiPlayerCountContainer');
@@ -94,8 +93,6 @@ class TournamentView extends HTMLElement {
                 if (formContainer.querySelector('#chkIA').checked) this.IA = true;
                 const realPlayersCount = this.qttplayers - (this.IA ? this.IAplayers : 0);
                 const aiPlayersCount = this.IA ? this.IAplayers : 0;
-                console.log(realPlayersCount);
-                console.log(aiPlayersCount);
                 this.tournamentData.players = [
                     ...Array.from({ length: realPlayersCount }, (_, i) => ({ type: 'REAL', name: `GAMER${i + 1}` })),
                     ...Array.from({ length: aiPlayersCount }, (_, i) => ({ type: 'AI', name: `IA${i + 1}` }))
