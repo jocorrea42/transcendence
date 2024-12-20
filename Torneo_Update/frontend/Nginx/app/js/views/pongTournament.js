@@ -420,18 +420,17 @@ class PongGameTournament extends HTMLElement {
     }
 }
 customElements.define('pong-tournament', PongGameTournament);
-export default function renderPonTournament(currentMatch, currentRoundIndex, lastSelect, addCustom,
-    addCustom1, addCustom2, player1, player2,IA, onGameEnd) {
+export default function renderPonTournament( addCustom, player1, player2, IA, onGameEnd) {
     const element = document.createElement('pong-tournament');
     element.player1 = player1;
     element.player2 = player2;
     element.onGameEnd = onGameEnd;
-    element.currentMatch = currentMatch;
-    element.currentRoundIndex = currentRoundIndex;
-    element.lastSelect = lastSelect;
-    element.addCustom = addCustom;
-    element.addCustom1 = addCustom1;
-    element.addCustom2 = addCustom2;
+    if (addCustom > 0)
+        element.addCustom = true;
+    if (addCustom > 1)
+        element.addCustom1 = true;
+    if (addCustom > 2)
+        element.addCustom2 = true;
     element.IA= IA;
     return element;
 }

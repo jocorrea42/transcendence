@@ -8,11 +8,11 @@ class TournamentView extends HTMLElement {
         this.tournamentData = { name: '', date: new Date().toISOString().split('.')[0], players: [], rounds: [], winner: null, };
         this.currentMatch = null;
         this.currentRoundIndex = 0;
-        this.addCustom = false;
-        this.addCustom1 = false;
-        this.addCustom2 = false;
+        this.addCustom = 0;
         this.configsaved = false;
         this.qttplayers = 2;
+        this.IAplayers = 0;
+        this.IA=false;
         this.playeron = false;
     }
     connectedCallback() {
@@ -48,31 +48,69 @@ class TournamentView extends HTMLElement {
                 <input type="range" id="speedSlider" min="0" max="2" step="1" value="0" style="width: 100%;">
                 <span id="sliderValue">4</span>
             </div>
+            <div style="margin-bottom: 10px;">
+                <label>
+                    <input type="checkbox" id="chkIA"> Habilitar IA
+                </label>
+            </div>
+            <div id="aiPlayerCountContainer" style="margin-bottom: 20px; display: none;">
+                <p>Selecciona la cantidad de jugadores IA:</p>
+                <input type="range" id="aiPlayerSlider" min="0" max="2" step="1" value="0" style="width: 100%;">
+                <span id="aiSliderValue">1</span>
+            </div>
             <button id="btnSave" type="button" style="width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Guardar Configuración</button>
         </div>`;
         // Lógica para el slider
-        const slider = formContainer.querySelector('#speedSlider');
-        const sliderValue = formContainer.querySelector('#sliderValue');
-        const values = [4, 8, 16];
-        slider.addEventListener('input', () => {
-            const selectedValue = values[slider.value];
-            sliderValue.textContent = selectedValue;
-            this.qttplayers = selectedValue;
-        });
-        // Manejo del botón Guardar
+        // const slider = formContainer.querySelector('#speedSlider');
+        // const sliderValue = formContainer.querySelector('#sliderValue');
+        // const values = [4, 8, 16];
+        // slider.addEventListener('input', () => {
+        //     const selectedValue = values[slider.value];
+        //     sliderValue.textContent = selectedValue;
+        //     this.qttplayers = selectedValue;
+        // });
+        // Lógica para el slider principal
+    const slider = formContainer.querySelector('#speedSlider');
+    const sliderValue = formContainer.querySelector('#sliderValue');
+    const aiSlider = formContainer.querySelector('#aiPlayerSlider');
+    const aiSliderValue = formContainer.querySelector('#aiSliderValue');
+    const values = [4, 8, 16];
+    const maxAIPlayers = values[slider.value] - 1; // máximo para IA, un menos que el slider principal
+    slider.addEventListener('input', () => {
+        const selectedValue = values[slider.value];
+        sliderValue.textContent = selectedValue;
+        this.qttplayers = selectedValue;
+        this.updateAIPlayerCount();
+    });
+    aiSlider.addEventListener('input', () => {
+        const selectedValue = aiSlider.value;
+        aiSliderValue.textContent = selectedValue;
+        this.IAplayers = values[slider.value] - selectedValue;
+    }); // Mostrar/Ocultar el contenedor de IA
+    formContainer.querySelector('#chkIA').addEventListener('change', () => {
+        const aiPlayerCountContainer = formContainer.querySelector('#aiPlayerCountContainer');
+        aiPlayerCountContainer.style.display = formContainer.querySelector('#chkIA').checked ? 'block' : 'none';
+        this.updateAIPlayerCount();
+    });// Lógica para actualizar el slider de IA basado en el slider principal
+    this.updateAIPlayerCount = () => {
+        const maxAIPlayers = values[slider.value] - 1;
+        aiSlider.max = maxAIPlayers;
+        aiSliderValue.textContent = Math.min(aiSlider.value, maxAIPlayers);
+    }; // Manejo del botón Guardar
         formContainer.querySelector('#btnSave').addEventListener('click', () => {
             const name = formContainer.querySelector('#tournament-name').value;
             if (name) {
                 this.tournamentData.name = name;
                 this.tournamentData.players = Array.from({ length: this.qttplayers }, (_, i) => `GAMER${i + 1}`);
                 if (formContainer.querySelector('#chkSpeed').checked)
-                    this.addCustom = true;
+                    this.addCustom++;
                 if (formContainer.querySelector('#chkSize').checked)
-                    this.addCustom1 = true;
+                    this.addCustom++;
                 if (formContainer.querySelector('#chkDecrease').checked)
-                    this.addCustom2 = true;
-                // Ocultar el formulario y mostrar la vista de edición de jugadores
-                formContainer.style.display = 'none';
+                    this.addCustom++;// Ocultar el formulario y mostrar la vista de edición de jugadores
+                if (formContainer.querySelector('#chkIA').checked)
+                    this.IA=true;
+                container.removeChild(formContainer);
                 this.renderEditPlayersView();
             } else
                 alert('Por favor, ingrese un nombre para el torneo.');
@@ -261,10 +299,12 @@ class TournamentView extends HTMLElement {
 }
 `;
         document.head.appendChild(style);
-        if (history.state && history.state.tournamentData) {
-            this.tournamentData = history.state.tournamentData;
-            console.log('Tournament data loaded:', this.tournamentData);
-        } else
+        const savedData = localStorage.getItem('tournamentData');
+        if (savedData){
+            this.tournamentData = JSON.parse(savedData);
+            this.renderTournamentView();
+        }
+        else
             this.createFormData(document.getElementById("app"));
     }
     renderEditPlayersView() {
@@ -320,17 +360,8 @@ class TournamentView extends HTMLElement {
         }
         this.renderTournamentView();
     }
-    updateHistoryState() {
-        if (!this.tournamentData.winner)
-            history.replaceState({ tournamentData: this.tournamentData }, '', window.location.href);
-        else// Elimina el estado del torneo cuando el torneo finaliza
-            history.replaceState(null, '', window.location.href);
-    }
-    resetTournament() {// Remover los datos del torneo de localStorage
-        localStorage.removeItem('tournamentData'); // Reiniciar los datos del torneo
-        this.tournamentData = { rounds: [], winner: null }; // Limpiar el historial
-        history.replaceState({ tournamentData: null }, '', window.location.href); // Renderizar la vista del torneo desde el inicio
-        this.renderTournamentView();
+    saveTournamentData() {
+        localStorage.setItem('tournamentData', JSON.stringify(this.tournamentData));
     }
     renderTournamentView() {
         if (this.tournamentData.winner) {
@@ -382,20 +413,11 @@ class TournamentView extends HTMLElement {
                         buttons.forEach(btn => btn.disabled = false);
                     }
                     this.currentMatch = null;
-                    this.updateHistoryState();
+                    this.saveTournamentData();
                     this.renderTournamentView();
                 });
             });
         });
-        // window.addEventListener('popstate', (event) => {
-        //     if (event.state && event.state.tournamentData) {
-        //         this.tournamentData = event.state.tournamentData;
-        //         this.renderTournamentView();
-        //     } else {// Si el estado es null, significa que el historial fue limpiado o restablecido
-        //         this.tournamentData = { rounds: [], winner: null };
-        //         this.renderTournamentView();
-        //     }
-        // });
     }
     async save_tournament() {
         try {
@@ -435,6 +457,7 @@ class TournamentView extends HTMLElement {
                 </div>
             </div>`;
         this.save_tournament();
+        localStorage.removeItem('tournamentData');
         history.replaceState(null, '', window.location.href);
         document.querySelector('#save-winner').addEventListener('click', async () => {
             const connected = await connectToMetaMask();
@@ -452,13 +475,12 @@ class TournamentView extends HTMLElement {
         brackets.innerHTML = '';
         const gameContainer = this.querySelector('#game-container');
         this.playeron = true;
-        const pongGame = renderPonTournament(this.currentMatch, this.currentRoundIndex, this.lastSelect, this.addCustom,
-            this.addCustom1, this.addCustom2, player1, player2, (winner, player1Score, player2Score) => { // Callback al terminar el juego
-                onGameEnd(winner, player1Score, player2Score);
-            });
+        const pongGame = renderPonTournament(this.addCustom, player1, player2, this.IA, (winner, player1Score, player2Score) => { // Callback al terminar el juego
+            onGameEnd(winner, player1Score, player2Score);
+        });
         this.playeron = false;
         gameContainer.innerHTML = '';
-        this.updateHistoryState();
+       this.saveTournamentData();
         gameContainer.appendChild(pongGame);
     }
     generateBracketHTML() {
