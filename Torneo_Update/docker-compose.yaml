@@ -14,6 +14,7 @@ services:
   tournament:
     depends_on:
       - postgres
+      - backend
     container_name: tournament
     build: ./tournament/
     image: tournament

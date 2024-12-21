@@ -26,10 +26,35 @@ class PongGameTournament extends HTMLElement {
         this.gameStarted = false;
         this.IA = false;
     }
+   
 
+    
+    
     async connectedCallback() {
         window.addEventListener('keydown', this.handleKeyDown.bind(this));
         window.addEventListener('keyup', this.handleKeyUp.bind(this));
+        const socket = new WebSocket('ws://localhost:8000/ws/game/');
+        socket.onopen = () => {
+            console.log('WebSocket connection established');
+        };
+        
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            const gameState = data.game_state;
+        
+            // Actualiza el estado del juego en tu frontend con gameState
+            updateGameState(gameState);
+        };
+        
+        function updateGameState(gameState) {
+            // Actualiza las palas, la pelota y la puntuación en función del estado recibido
+            // ...
+        }
+        
+        // Cuando el jugador haga un movimiento, envíalo al servidor
+        function sendGameUpdate(gameState) {
+            socket.send(JSON.stringify({ game_state: gameState }));
+        }
         if (!this.IA) {
             window.addEventListener('keydown', this.handleKeyDownL.bind(this));
             window.addEventListener('keyup', this.handleKeyUpL.bind(this));

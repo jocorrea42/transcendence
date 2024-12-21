@@ -1,6 +1,8 @@
 import renderPonTournament from "./pongTournament.js";
 import { connectToMetaMask, saveToBlockchain } from './blockchain.js';
 import { handleRouteChange } from "../mainScript.js";
+import headerNavBar from '../webComponents/headerNavBar.js';
+import SideNavBar from  '../webComponents/sideNavBarComponent.js';
 
 class TournamentView extends HTMLElement {
     constructor() {
@@ -16,6 +18,11 @@ class TournamentView extends HTMLElement {
         this.playeron = false;
     }
     connectedCallback() {
+        const body = document.querySelector('body');
+        const navBar = document.createElement('header-nav-bar');
+        body.insertAdjacentElement('afterbegin', navBar);
+        const sideNavBar = document.createElement('side-nav-bar');
+        navBar.insertAdjacentElement('afterend', sideNavBar);
         this.addStyles();
     }
     createFormData(container) {
@@ -111,7 +118,17 @@ class TournamentView extends HTMLElement {
 
     addStyles() {
         const style = document.createElement('style');
-        style.textContent = `.form-container {
+        style.textContent = `
+        header-nav-bar {
+            position: fixed; /* Fijarlo en la parte superior */
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000; /* Asegura que esté por encima del resto del contenido */
+            background-color: #fff; /* Fondo para que sea visible */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Opcional: para darle sombra */
+        }
+        .form-container {
             padding: 20px;
             border: 1px solid #ccc;
             border-radius: 12px;
@@ -332,7 +349,8 @@ class TournamentView extends HTMLElement {
             const inputs = Array.from(this.querySelectorAll('input[data-index]'));
             const updatedPlayers = inputs.map(input => {
                 const index = parseInt(input.dataset.index, 10);
-                return {index,name: input.value.trim()};});
+                return { index, name: input.value.trim() };
+            });
             const errorMessageElement = this.querySelector('#error-message');// Validar nombres vacíos
             if (updatedPlayers.some(player => player.name === "")) {
                 errorMessageElement.textContent = 'Todos los jugadores deben tener un nombre.';
@@ -422,7 +440,7 @@ class TournamentView extends HTMLElement {
                     match.winner = winner;
                     match.player1_score = player1Score;
                     match.player2_score = player2Score;
-                    if (match.player2.type === 'AI' && match.player1.type === 'REAL' ) {
+                    if (match.player2.type === 'AI' && match.player1.type === 'REAL') {
                         match.player1_score = player2Score;
                         match.player2_score = player1Score;
                     }
@@ -500,11 +518,11 @@ class TournamentView extends HTMLElement {
         let pongGame = null;
         if (player1.type === 'AI' && player2.type === 'AI') {
             const winner = Math.random() < 0.5 ? player1 : player2;
-            let player1Score = 3; 
+            let player1Score = 3;
             let player2Score = 0;
             if (winner.name === player2.name) {
-                player1Score = 0; 
-                player2Score = 3; 
+                player1Score = 0;
+                player2Score = 3;
             }
             return onGameEnd(winner, player1Score, player2Score);
         }
