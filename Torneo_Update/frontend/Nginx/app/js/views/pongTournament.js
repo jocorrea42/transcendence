@@ -173,31 +173,18 @@ class PongGameTournament extends HTMLElement {
         animate();
     }
     moveAI(object) {
-        if (!object.IA) return; // Salir si la IA está deshabilitada
-
         const ballSpeedX = (object.ballSpeedX * object.ballDireccionX);
         const ballSpeedY = (object.ballSpeedY * object.ballDireccionY);
         const minY = -4; // Límite inferior del área de juego
         const maxY = 8;  // Límite superior del área de juego
-        // Predicción de la posición futura de la pelota
         let futureLeft = object.ball.position.y + ((object.paddleLeft.position.x - object.ball.position.x) / ballSpeedX) * ballSpeedY;
-        // Ajustar predicción si la pelota está fuera de los límites
         while (futureLeft < minY || futureLeft > maxY) {
-            if (futureLeft < minY) {
+            if (futureLeft < minY) 
                 futureLeft = minY + (minY - futureLeft);
-            } else if (futureLeft > maxY) {
+            else if (futureLeft > maxY) 
                 futureLeft = maxY - (futureLeft - maxY);
-            }
         }
-        // Ajustar gradualmente la posición del paddle hacia el objetivo
-        const currentY = object.paddleLeft.position.y;
-        const step = object.aiSpeed * (futureLeft > currentY ? 1 : -1);
-        object.targetPaddleLeftY = futureLeft;
-        if (Math.abs(futureLeft - currentY) > Math.abs(step)) {
-            object.paddleLeft.position.y += step;
-        } else {
-            object.paddleLeft.position.y = futureLeft;
-        }
+        object.targetPaddleLeftY+=(object.aiSpeed * (futureLeft > object.paddleLeft.position.y ? 1 : -1));
         object.paddleLeft.position.y = THREE.MathUtils.clamp(object.paddleLeft.position.y, minY, maxY);
     }
     printCountdown(countdown, countdownMesh, scene, font) {
