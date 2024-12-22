@@ -1,8 +1,7 @@
 import renderPonTournament from "./pongTournament.js";
 import { connectToMetaMask, saveToBlockchain } from './blockchain.js';
 import { handleRouteChange } from "../mainScript.js";
-import headerNavBar from '../webComponents/headerNavBar.js';
-import SideNavBar from  '../webComponents/sideNavBarComponent.js';
+
 
 class TournamentView extends HTMLElement {
     constructor() {
@@ -120,13 +119,13 @@ class TournamentView extends HTMLElement {
         const style = document.createElement('style');
         style.textContent = `
         header-nav-bar {
-            position: fixed; /* Fijarlo en la parte superior */
+			position: relative;
             top: 0;
             left: 0;
             width: 100%;
-            z-index: 1000; /* Asegura que esté por encima del resto del contenido */
-            background-color: #fff; /* Fondo para que sea visible */
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Opcional: para darle sombra */
+			margin-bottom: 2rem;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
         .form-container {
             padding: 20px;
@@ -194,6 +193,16 @@ class TournamentView extends HTMLElement {
         .hidden {
             display: none;
         }
+#form-container {
+	padding-top: 4rem;
+	padding-bottom: 15rem;
+	overflow-y: auto;
+	height: 100vh;
+    scroll-behavior: smooth;
+}
+#form-container::-webkit-scrollbar {
+    display: none;
+}
 .match {
     display: flex;
     flex-direction: column;
@@ -201,7 +210,7 @@ class TournamentView extends HTMLElement {
     text-align: center;
 	margin-bottom: 2rem;
     padding: 1rem;
-    background-color: #e0f2fe; /* Azul claro pastel */
+    background-color: #e0f2fe;
     border-radius: 12px;
     position: relative;
     min-width: 140px;
@@ -234,53 +243,74 @@ class TournamentView extends HTMLElement {
 #app{
 	display: flex;
 }
-#tournament-view {
-    max-height: 100vh;
-    overflow-y: auto;
-    scroll-behavior: smooth;
-    padding: 1rem;
-}
 #bracket {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 3rem;
+	padding: 0px 10px;
+    gap: 3rem;	
+}
+#winner {
+	padding-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: stretch;
+    height: 100%;
+    position: relative;
+}
+
+#winner-buttons {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: auto;
+	gap: 2rem;
+}
+
+#winner-buttons button {
+    flex: 1;
+    padding: 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+#winner-buttons button#new-tournament {
+    background-color: #28a745;
+    color: white;
+}
+
+#winner-buttons button#save-winner {
+    background-color: #007bff;
+    color: white;
+}
+
+#winner-buttons button#exit {
+    background-color: #dc3545;
+    color: white;
+}
+
+#tournament-view {
+	padding-top: 2rem;
+	padding-bottom: 10rem;
+    max-height: 100vh;
     overflow-y: auto;
     scroll-behavior: smooth;
-    padding: 1rem; Agregar espacio interno para evitar cortes 
-    /*box-sizing: border-box;  Incluir padding en las dimensiones */
 }
 #tournament-view::-webkit-scrollbar {
     display: none;
 }
-@media (max-width: 768px) {
-    #bracket {
-        flex-direction: column;
-        gap: 1rem;
-    }
+#tournament-final-view {
+	padding-bottom: 15rem;
+	padding-top: 2rem;
+    max-height: 100vh;
+    overflow-y: auto;
+    scroll-behavior: smooth;
 }
-#edit-players-view {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding-top: 0;
-	padding: 20px 10px;
-    max-height: calc(100vh - 40px); /* Deja algo de espacio para márgenes */
-    background-color: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-    max-width: 400px;
-    margin: 0 auto;
-    max-height: 80vh; /* Limitar altura máxima */
-    overflow-y: auto; /* Habilitar scroll vertical */
-    scroll-behavior: smooth; /* Suavizar el desplazamiento */
-}
-#edit-players-view::-webkit-scrollbar {
-    width: 8px; /* Ancho del scroll */
-}
-#edit-players-view::-webkit-scrollbar-thumb {
-    background-color: #3b82f6; /* Color del scroll */
-    border-radius: 8px;
+#tournament-final-view::-webkit-scrollbar {
+    display: none;
 }
 #edit-players-view h2 {
 	margin: 0 0 1rem 0;
@@ -334,7 +364,8 @@ class TournamentView extends HTMLElement {
             this.createFormData(document.getElementById("app"));
     }
     renderEditPlayersView() {
-        this.innerHTML = `<div id="edit-players-view">
+        this.innerHTML = `<div id="form-container">
+		<div class="form-container">
             <h2>Editar Jugadores</h2>
             ${this.tournamentData.players.filter(player => player.type === 'REAL').map((player, index) => `
                     <div class="player-input">
@@ -344,7 +375,7 @@ class TournamentView extends HTMLElement {
                 `).join('')}
             <div id="error-message" style="color: red; display: none;"></div>
             <button id="btnSave" type="button" style="width: 40%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">ACEPTAR</button>
-        </div>`;
+        </div></div>`;
         this.querySelector('#btnSave').addEventListener('click', () => {
             const inputs = Array.from(this.querySelectorAll('input[data-index]'));
             const updatedPlayers = inputs.map(input => {
@@ -432,6 +463,9 @@ class TournamentView extends HTMLElement {
         buttons.forEach(button => {
             button.addEventListener('click', (e) => {
                 buttons.forEach(btn => btn.disabled = true);
+				const tournamentView = this.querySelector('#tournament-view');
+            	tournamentView.style.paddingTop = '0rem';
+				tournamentView.style.paddingBottom = '0rem';
                 const roundIndex = parseInt(button.dataset.roundIndex, 10);
                 const matchIndex = parseInt(button.dataset.matchIndex, 10);
                 const match = this.tournamentData.rounds[roundIndex][matchIndex];
@@ -454,6 +488,8 @@ class TournamentView extends HTMLElement {
                     }
                     this.currentMatch = null;
                     this.saveTournamentData();
+					tournamentView.style.paddingTop = '2rem';
+					tournamentView.style.paddingBottom = '10rem';
                     this.renderTournamentView();
                 });
             });
@@ -493,14 +529,20 @@ class TournamentView extends HTMLElement {
                 <div id="winner">
                     <h2>¡Ganador del Torneo!</h2>
 					<p class="gradient-text">${this.tournamentData.winner.name}</p>
-                    <button id="save-winner">Guardar y salir</button>
-                    <button id="exit">Salir</button>
+                    <div id="winner-buttons">
+						<button id="new-tournament">Nuevo torneo</button>
+            			<button id="save-winner">Guardar resultado</button>
+            			<button id="exit">Salir</button>
+        			</div>
                 </div>
             </div>`;
         this.save_tournament();
         localStorage.removeItem('tournamentData');
         history.replaceState(null, '', window.location.href);
-        document.querySelector('#save-winner').addEventListener('click', async () => {
+        document.querySelector('#new-tournament').addEventListener('click', () => {
+			location.reload();
+		});
+		document.querySelector('#save-winner').addEventListener('click', async () => {
             const connected = await connectToMetaMask();
             if (!connected) return;
             await saveToBlockchain(this.tournamentData.name, this.tournamentData.date, this.tournamentData.winner.name);
@@ -555,4 +597,4 @@ class TournamentView extends HTMLElement {
     }
 }
 customElements.define('tournament-view', TournamentView);
-export default function renderTournamentApp() { return '<tournament-view></tournament-view>'; }
+export default function renderTournamentApp() { return '<side-nav-bar></side-nav-bar><tournament-view></tournament-view>'; }
